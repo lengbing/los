@@ -53,7 +53,7 @@
     (((x) & 0x000000000000ff00) << 40) | \
     (((x) & 0x00000000000000ff) << 56))
 
-#define checkbuflen(len, need) (void)(((len) >= (need)) || luaL_error(L, "los code line %d: buffer length error", __LINE__));
+#define checkbuflen(len, need) (void)(((len) >= (need)) || luaL_error(L, "not enough avaliable buffer"));
 
 typedef union ucast
 {
@@ -122,35 +122,35 @@ static size_t pack_le(lua_State* L, luaL_Buffer* B)
         }
     }
     case LUA_TSTRING: {
-        size_t strlen;
-        const char* s = lua_tolstring(L, -1, &strlen);
-        size_t size = strlen;
-        if (strlen <= 31) {
-            uint8_t c = (uint8_t)strlen;
+        size_t strlength;
+        const char* s = lua_tolstring(L, -1, &strlength);
+        size_t size = strlength;
+        if (strlength <= 31) {
+            uint8_t c = (uint8_t)strlength;
             c |= SIGN_SHRSTR;
             luaL_addchar(B, c);
             size += 1;
         }
-        else if (strlen <= UINT8_MAX) {
-            uint8_t c = (uint8_t)strlen;
+        else if (strlength <= UINT8_MAX) {
+            uint8_t c = (uint8_t)strlength;
             luaL_addchar(B, SIGN_STR1);
             luaL_addchar(B, c);
             size += 2;
         }
-        else if (strlen <= UINT16_MAX) {
+        else if (strlength <= UINT16_MAX) {
             luaL_addchar(B, SIGN_STR2);
-            luaL_addlstring(B, (const char*)&strlen, 2);
+            luaL_addlstring(B, (const char*)&strlength, 2);
             size += 3;
         }
-        else if (strlen <= UINT32_MAX) {
+        else if (strlength <= UINT32_MAX) {
             luaL_addchar(B, SIGN_STR4);
-            luaL_addlstring(B, (const char*)&strlen, 4);
+            luaL_addlstring(B, (const char*)&strlength, 4);
             size += 5;
         }
         else {
             luaL_error(L, "string is too long");
         }
-        luaL_addlstring(B, s, strlen);
+        luaL_addlstring(B, s, strlength);
         return size;
     }
     case LUA_TTABLE: {
@@ -245,37 +245,37 @@ static size_t pack_be(lua_State* L, luaL_Buffer* B)
         }
     }
     case LUA_TSTRING: {
-        size_t strlen;
-        const char* s = lua_tolstring(L, -1, &strlen);
-        size_t size = strlen;
-        if (strlen <= 31) {
-            uint8_t c = (uint8_t)strlen;
+        size_t strlength;
+        const char* s = lua_tolstring(L, -1, &strlength);
+        size_t size = strlength;
+        if (strlength <= 31) {
+            uint8_t c = (uint8_t)strlength;
             c |= SIGN_SHRSTR;
             luaL_addchar(B, c);
             size += 1;
         }
-        else if (strlen <= UINT8_MAX) {
-            uint8_t c = (uint8_t)strlen;
+        else if (strlength <= UINT8_MAX) {
+            uint8_t c = (uint8_t)strlength;
             luaL_addchar(B, SIGN_STR1);
             luaL_addchar(B, c);
             size += 2;
         }
-        else if (strlen <= UINT16_MAX) {
-            strlen = swap64(strlen);
+        else if (strlength <= UINT16_MAX) {
+            strlength = swap64(strlength);
             luaL_addchar(B, SIGN_STR2);
-            luaL_addlstring(B, (const char*)&strlen, 2);
+            luaL_addlstring(B, (const char*)&strlength, 2);
             size += 3;
         }
-        else if (strlen <= UINT32_MAX) {
-            strlen = swap64(strlen);
+        else if (strlength <= UINT32_MAX) {
+            strlength = swap64(strlength);
             luaL_addchar(B, SIGN_STR4);
-            luaL_addlstring(B, (const char*)&strlen, 4);
+            luaL_addlstring(B, (const char*)&strlength, 4);
             size += 5;
         }
         else {
             luaL_error(L, "string is too long");
         }
-        luaL_addlstring(B, s, strlen);
+        luaL_addlstring(B, s, strlength);
         return size;
     }
     case LUA_TTABLE: {
@@ -392,43 +392,43 @@ static size_t packbuf_le(lua_State* L, char* B, size_t buflen)
         }
     }
     case LUA_TSTRING: {
-        size_t strlen;
-        const char* s = lua_tolstring(L, -1, &strlen);
-        if (strlen <= 31) {
-            checkbuflen(buflen, 1 + strlen);
-            uint8_t c = (uint8_t)strlen;
+        size_t strlength;
+        const char* s = lua_tolstring(L, -1, &strlength);
+        if (strlength <= 31) {
+            checkbuflen(buflen, 1 + strlength);
+            uint8_t c = (uint8_t)strlength;
             c |= SIGN_SHRSTR;
             B[0] = c;
-            memcpy(B + 1, s, strlen);
-            return 1 + strlen;
+            memcpy(B + 1, s, strlength);
+            return 1 + strlength;
         }
-        else if (strlen <= UINT8_MAX) {
-            checkbuflen(buflen, 2 + strlen);
-            uint8_t c = (uint8_t)strlen;
+        else if (strlength <= UINT8_MAX) {
+            checkbuflen(buflen, 2 + strlength);
+            uint8_t c = (uint8_t)strlength;
             B[0] = SIGN_STR1;
             B[1] = c;
-            memcpy(B + 2, s, strlen);
-            return 2 + strlen;
+            memcpy(B + 2, s, strlength);
+            return 2 + strlength;
         }
-        else if (strlen <= UINT16_MAX) {
-            checkbuflen(buflen, 3 + strlen);
-            uint16_t i = (uint16_t)strlen;
+        else if (strlength <= UINT16_MAX) {
+            checkbuflen(buflen, 3 + strlength);
+            uint16_t i = (uint16_t)strlength;
             B[0] = SIGN_STR2;
             B[1] = *(char*)&i;
             B[2] = *((char*)&i + 1);
-            memcpy(B + 3, s, strlen);
-            return 3 + strlen;
+            memcpy(B + 3, s, strlength);
+            return 3 + strlength;
         }
-        else if (strlen <= UINT32_MAX) {
-            checkbuflen(buflen, 5 + strlen);
-            uint32_t i = (uint32_t)strlen;
+        else if (strlength <= UINT32_MAX) {
+            checkbuflen(buflen, 5 + strlength);
+            uint32_t i = (uint32_t)strlength;
             B[0] = SIGN_STR4;
             B[1] = *(char*)&i;
             B[2] = *((char*)&i + 1);
             B[3] = *((char*)&i + 2);
             B[4] = *((char*)&i + 3);
-            memcpy(B + 5, s, strlen);
-            return 5 + strlen;
+            memcpy(B + 5, s, strlength);
+            return 5 + strlength;
         }
         else {
             luaL_error(L, "string is too long");
@@ -553,43 +553,43 @@ static size_t packbuf_be(lua_State* L, char* B, size_t buflen)
         }
     }
     case LUA_TSTRING: {
-        size_t strlen;
-        const char* s = lua_tolstring(L, -1, &strlen);
-        if (strlen <= 31) {
-            checkbuflen(buflen, 1 + strlen);
-            uint8_t c = (uint8_t)strlen;
+        size_t strlength;
+        const char* s = lua_tolstring(L, -1, &strlength);
+        if (strlength <= 31) {
+            checkbuflen(buflen, 1 + strlength);
+            uint8_t c = (uint8_t)strlength;
             c |= SIGN_SHRSTR;
             B[0] = c;
-            memcpy(B + 1, s, strlen);
-            return 1 + strlen;
+            memcpy(B + 1, s, strlength);
+            return 1 + strlength;
         }
-        else if (strlen <= UINT8_MAX) {
-            checkbuflen(buflen, 2 + strlen);
-            uint8_t c = (uint8_t)strlen;
+        else if (strlength <= UINT8_MAX) {
+            checkbuflen(buflen, 2 + strlength);
+            uint8_t c = (uint8_t)strlength;
             B[0] = SIGN_STR1;
             B[1] = c;
-            memcpy(B + 2, s, strlen);
-            return 2 + strlen;
+            memcpy(B + 2, s, strlength);
+            return 2 + strlength;
         }
-        else if (strlen <= UINT16_MAX) {
-            checkbuflen(buflen, 3 + strlen);
-            uint16_t i = (uint16_t)strlen;
+        else if (strlength <= UINT16_MAX) {
+            checkbuflen(buflen, 3 + strlength);
+            uint16_t i = (uint16_t)strlength;
             B[0] = SIGN_STR2;
             B[1] = *((char*)&i + 1);
             B[2] = *(char*)&i;
-            memcpy(B + 3, s, strlen);
-            return 3 + strlen;
+            memcpy(B + 3, s, strlength);
+            return 3 + strlength;
         }
-        else if (strlen <= UINT32_MAX) {
-            checkbuflen(buflen, 5 + strlen);
-            uint32_t i = (uint32_t)strlen;
+        else if (strlength <= UINT32_MAX) {
+            checkbuflen(buflen, 5 + strlength);
+            uint32_t i = (uint32_t)strlength;
             B[0] = SIGN_STR4;
             B[1] = *((char*)&i + 3);
             B[2] = *((char*)&i + 2);
             B[3] = *((char*)&i + 1);
             B[4] = *(char*)&i;
-            memcpy(B + 5, s, strlen);
-            return 5 + strlen;
+            memcpy(B + 5, s, strlength);
+            return 5 + strlength;
         }
         else {
             luaL_error(L, "string is too long");
@@ -647,10 +647,10 @@ static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
     }
     if (IS_SHRSTR(c)) {
         c &= ~MASK_SHRSTR;
-        size_t strlen = c;
-        checkbuflen(buflen, 1 + strlen);
-        lua_pushlstring(L, B + 1, strlen);
-        return 1 + strlen;
+        size_t strlength = c;
+        checkbuflen(buflen, 1 + strlength);
+        lua_pushlstring(L, B + 1, strlength);
+        return 1 + strlength;
     }
     int sign = (uint8_t)c;
     switch (sign)
@@ -709,10 +709,10 @@ static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
     }
     case SIGN_STR1: {
         checkbuflen(buflen, 2);
-        size_t strlen = B[1];
-        checkbuflen(buflen, 2 + strlen);
-        lua_pushlstring(L, B + 2, strlen);
-        return 2 + strlen;
+        size_t strlength = B[1];
+        checkbuflen(buflen, 2 + strlength);
+        lua_pushlstring(L, B + 2, strlength);
+        return 2 + strlength;
     }
     case SIGN_STR2: {
         checkbuflen(buflen, 3);
@@ -720,10 +720,10 @@ static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
             .u8[0] = B[1],
             .u8[1] = B[2],
         };
-        size_t strlen = u.u16[0];
-        checkbuflen(buflen, 3 + strlen);
-        lua_pushlstring(L, B, 3 + strlen);
-        return 3 + strlen;
+        size_t strlength = u.u16[0];
+        checkbuflen(buflen, 3 + strlength);
+        lua_pushlstring(L, B, 3 + strlength);
+        return 3 + strlength;
     }
     case SIGN_STR4: {
         checkbuflen(buflen, 5);
@@ -733,10 +733,10 @@ static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
             .u8[2] = B[3],
             .u8[3] = B[4],
         };
-        size_t strlen = u.u32[0];
-        checkbuflen(buflen, 5 + strlen);
-        lua_pushlstring(L, B + 5, strlen);
-        return 5 + strlen;
+        size_t strlength = u.u32[0];
+        checkbuflen(buflen, 5 + strlength);
+        lua_pushlstring(L, B + 5, strlength);
+        return 5 + strlength;
     }
     case SIGN_FLT: {
         checkbuflen(buflen, 9);
@@ -767,7 +767,7 @@ static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
             total += consume;
             consume = unpack_le(L, B + total, buflen - total);
             if (consume == 0) {
-                luaL_error(L, "buffer incomplete");
+                luaL_error(L, "incomplete buffer");
             }
             total += consume;
             lua_rotate(L, -2, 1);
@@ -800,10 +800,10 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
     }
     if (IS_SHRSTR(c)) {
         c &= ~MASK_SHRSTR;
-        size_t strlen = c;
-        checkbuflen(buflen, 1 + strlen);
-        lua_pushlstring(L, B + 1, strlen);
-        return 1 + strlen;
+        size_t strlength = c;
+        checkbuflen(buflen, 1 + strlength);
+        lua_pushlstring(L, B + 1, strlength);
+        return 1 + strlength;
     }
     int sign = (uint8_t)c;
     switch (sign)
@@ -862,10 +862,10 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
     }
     case SIGN_STR1: {
         checkbuflen(buflen, 2);
-        size_t strlen = B[1];
-        checkbuflen(buflen, 2 + strlen);
-        lua_pushlstring(L, B + 2, strlen);
-        return 2 + strlen;
+        size_t strlength = B[1];
+        checkbuflen(buflen, 2 + strlength);
+        lua_pushlstring(L, B + 2, strlength);
+        return 2 + strlength;
     }
     case SIGN_STR2: {
         checkbuflen(buflen, 3);
@@ -873,10 +873,10 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
             .u8[0] = B[2],
             .u8[1] = B[1],
         };
-        size_t strlen = u.u16[0];
-        checkbuflen(buflen, 3 + strlen);
-        lua_pushlstring(L, B + 3, strlen);
-        return 3 + strlen;
+        size_t strlength = u.u16[0];
+        checkbuflen(buflen, 3 + strlength);
+        lua_pushlstring(L, B + 3, strlength);
+        return 3 + strlength;
     }
     case SIGN_STR4: {
         checkbuflen(buflen, 5);
@@ -886,10 +886,10 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
             .u8[2] = B[2],
             .u8[3] = B[1],
         };
-        size_t strlen = u.u32[0];
-        checkbuflen(buflen, 5 + strlen);
-        lua_pushlstring(L, B + 5, strlen);
-        return 5 + strlen;
+        size_t strlength = u.u32[0];
+        checkbuflen(buflen, 5 + strlength);
+        lua_pushlstring(L, B + 5, strlength);
+        return 5 + strlength;
     }
     case SIGN_FLT: {
         checkbuflen(buflen, 9);
@@ -920,7 +920,7 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
             total += consume;
             consume = unpack_be(L, B + total, buflen - total);
             if (consume == 0) {
-                luaL_error(L, "buffer incomplete");
+                luaL_error(L, "incomplete buffer");
             }
             total += consume;
             lua_rotate(L, -2, 1);
@@ -951,16 +951,16 @@ static int lua_pack_le(lua_State* L)
         char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t useLength = packbuf_le(L, B + offset, availableSize);
-        lua_pushinteger(L, useLength);
+        size_t resultingLength = packbuf_le(L, B + offset, availableSize);
+        lua_pushinteger(L, resultingLength);
         return 1;
     }
     else {
         luaL_Buffer B;
         luaL_buffinit(L, &B);
-        size_t size = pack_le(L, &B);
+        size_t resultingLength = pack_le(L, &B);
         luaL_pushresult(&B);
-        lua_pushinteger(L, size);
+        lua_pushinteger(L, resultingLength);
         return 2;
     }
 }
@@ -976,16 +976,16 @@ static int lua_pack_be(lua_State* L)
         char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t useLength = packbuf_be(L, B + offset, availableSize);
-        lua_pushinteger(L, useLength);
+        size_t resultingLength = packbuf_be(L, B + offset, availableSize);
+        lua_pushinteger(L, resultingLength);
         return 1;
     }
     else {
         luaL_Buffer B;
         luaL_buffinit(L, &B);
-        size_t size = pack_be(L, &B);
+        size_t resultingLength = pack_be(L, &B);
         luaL_pushresult(&B);
-        lua_pushinteger(L, size);
+        lua_pushinteger(L, resultingLength);
         return 2;
     }
 }
@@ -1000,16 +1000,16 @@ static int lua_unpack_le(lua_State* L)
         const char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t useLength = unpack_le(L, B + offset, availableSize);
-        lua_pushinteger(L, useLength);
+        size_t consumedLength = unpack_le(L, B + offset, availableSize);
+        lua_pushinteger(L, consumedLength);
         return 2;
     }
     else {
         luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
         size_t availableSize;
         const char* B = lua_tolstring(L, -1, &availableSize);
-        size_t useLength = unpack_le(L, B, availableSize);
-        lua_pushinteger(L, useLength);
+        size_t consumedLength = unpack_le(L, B, availableSize);
+        lua_pushinteger(L, consumedLength);
         return 2;
     }
 }
@@ -1024,16 +1024,16 @@ static int lua_unpack_be(lua_State* L)
         const char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t useLength = unpack_be(L, B + offset, availableSize);
-        lua_pushinteger(L, useLength);
+        size_t consumedLength = unpack_be(L, B + offset, availableSize);
+        lua_pushinteger(L, consumedLength);
         return 2;
     }
     else {
         luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
         size_t availableSize;
         const char* B = lua_tolstring(L, -1, &availableSize);
-        size_t useLength = unpack_be(L, B, availableSize);
-        lua_pushinteger(L, useLength);
+        size_t consumedLength = unpack_be(L, B, availableSize);
+        lua_pushinteger(L, consumedLength);
         return 2;
     }
 }
