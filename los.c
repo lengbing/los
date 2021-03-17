@@ -944,106 +944,106 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
 static int lua_pack_le(lua_State* L)
 {
     luaL_checkany(L, 1);
-    luaL_Buffer B;
-    luaL_buffinit(L, &B);
-    size_t size = pack_le(L, &B);
-    luaL_pushresult(&B);
-    lua_pushinteger(L, size);
-    return 2;
+    if (lua_islightuserdata(L, 1)) {
+        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
+        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        luaL_checkany(L, 4);
+        char* B = lua_touserdata(L, 1);
+        size_t offset = lua_tointeger(L, 2);
+        size_t availableSize = lua_tointeger(L, 3);
+        size_t useLength = packbuf_le(L, B + offset, availableSize);
+        lua_pushinteger(L, useLength);
+        return 1;
+    }
+    else {
+        luaL_Buffer B;
+        luaL_buffinit(L, &B);
+        size_t size = pack_le(L, &B);
+        luaL_pushresult(&B);
+        lua_pushinteger(L, size);
+        return 2;
+    }
 }
 
 
 static int lua_pack_be(lua_State* L)
 {
     luaL_checkany(L, 1);
-    luaL_Buffer B;
-    luaL_buffinit(L, &B);
-    size_t size = pack_be(L, &B);
-    luaL_pushresult(&B);
-    lua_pushinteger(L, size);
-    return 2;
-}
-
-
-static int lua_packbuf_le(lua_State* L)
-{
-    luaL_checkany(L, 1);
-    luaL_argexpected(L, lua_islightuserdata(L, 2), 2, lua_typename(L, LUA_TLIGHTUSERDATA));
-    luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
-    char* B = lua_touserdata(L, 2);
-    size_t buflen = lua_tointeger(L, 3);
-    lua_settop(L, 1);
-    size_t size = packbuf_le(L, B, buflen);
-    lua_pushinteger(L, size);
-    return 1;
-}
-
-
-static int lua_packbuf_be(lua_State* L)
-{
-    luaL_checkany(L, 1);
-    luaL_argexpected(L, lua_islightuserdata(L, 2), 2, lua_typename(L, LUA_TLIGHTUSERDATA));
-    luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
-    char* B = lua_touserdata(L, 2);
-    size_t buflen = lua_tointeger(L, 3);
-    lua_settop(L, 1);
-    size_t size = packbuf_be(L, B, buflen);
-    lua_pushinteger(L, size);
-    return 1;
+    if (lua_islightuserdata(L, 1)) {
+        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
+        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        luaL_checkany(L, 4);
+        char* B = lua_touserdata(L, 1);
+        size_t offset = lua_tointeger(L, 2);
+        size_t availableSize = lua_tointeger(L, 3);
+        size_t useLength = packbuf_be(L, B + offset, availableSize);
+        lua_pushinteger(L, useLength);
+        return 1;
+    }
+    else {
+        luaL_Buffer B;
+        luaL_buffinit(L, &B);
+        size_t size = pack_be(L, &B);
+        luaL_pushresult(&B);
+        lua_pushinteger(L, size);
+        return 2;
+    }
 }
 
 
 static int lua_unpack_le(lua_State* L)
 {
-    luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
-    size_t strlen;
-    const char* s = lua_tolstring(L, -1, &strlen);
-    size_t consume = unpack_le(L, s, strlen);
-    lua_pushinteger(L, consume);
-    return 2;
+    luaL_checkany(L, 1);
+    if (lua_islightuserdata(L, 1)) {
+        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
+        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        const char* B = lua_touserdata(L, 1);
+        size_t offset = lua_tointeger(L, 2);
+        size_t availableSize = lua_tointeger(L, 3);
+        size_t useLength = unpack_le(L, B + offset, availableSize);
+        lua_pushinteger(L, useLength);
+        return 2;
+    }
+    else {
+        luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
+        size_t availableSize;
+        const char* B = lua_tolstring(L, -1, &availableSize);
+        size_t useLength = unpack_le(L, B, availableSize);
+        lua_pushinteger(L, useLength);
+        return 2;
+    }
 }
 
 
 static int lua_unpack_be(lua_State* L)
 {
-    luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
-    size_t strlen;
-    const char* s = lua_tolstring(L, -1, &strlen);
-    size_t consume = unpack_be(L, s, strlen);
-    lua_pushinteger(L, consume);
-    return 2;
-}
-
-
-static int lua_unpackbuf_le(lua_State* L)
-{
-    luaL_argexpected(L, lua_islightuserdata(L, 1), 1, lua_typename(L, LUA_TLIGHTUSERDATA));
-    luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
-    const char* B = lua_touserdata(L, 1);
-    size_t buflen = lua_tointeger(L, 2);
-    size_t consume = unpack_le(L, B, buflen);
-    lua_pushinteger(L, consume);
-    return 2;
-}
-
-
-static int lua_unpackbuf_be(lua_State* L)
-{
-    luaL_argexpected(L, lua_islightuserdata(L, 1), 1, lua_typename(L, LUA_TLIGHTUSERDATA));
-    luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
-    const char* B = lua_touserdata(L, 1);
-    size_t buflen = lua_tointeger(L, 2);
-    size_t consume = unpack_be(L, B, buflen);
-    lua_pushinteger(L, consume);
-    return 2;
+    luaL_checkany(L, 1);
+    if (lua_islightuserdata(L, 1)) {
+        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
+        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        const char* B = lua_touserdata(L, 1);
+        size_t offset = lua_tointeger(L, 2);
+        size_t availableSize = lua_tointeger(L, 3);
+        size_t useLength = unpack_be(L, B + offset, availableSize);
+        lua_pushinteger(L, useLength);
+        return 2;
+    }
+    else {
+        luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
+        size_t availableSize;
+        const char* B = lua_tolstring(L, -1, &availableSize);
+        size_t useLength = unpack_be(L, B, availableSize);
+        lua_pushinteger(L, useLength);
+        return 2;
+    }
 }
 
 
 static int lua_newbuf(lua_State* L)
 {
     luaL_argexpected(L, lua_isinteger(L, 1), 1, "integer");
-    size_t buflen = lua_tointeger(L, 1);
-    char* B = malloc(buflen);
+    size_t size = lua_tointeger(L, 1);
+    char* B = malloc(size);
     if (B) {
         lua_pushlightuserdata(L, B);
         return 1;
@@ -1070,8 +1070,6 @@ LOS_EXPORT int luaopen_los(lua_State* L)
         luaL_Reg lib[] = {
             {"pack", lua_pack_le},
             {"unpack", lua_unpack_le},
-            {"packbuf", lua_packbuf_le},
-            {"unpackbuf", lua_unpackbuf_le},
             {"newbuf", lua_newbuf},
             {"delbuf", lua_delbuf},
             {NULL, NULL}
@@ -1082,8 +1080,6 @@ LOS_EXPORT int luaopen_los(lua_State* L)
         luaL_Reg lib[] = {
             {"pack", lua_pack_be},
             {"unpack", lua_unpack_be},
-            {"packbuf", lua_packbuf_be},
-            {"unpackbuf", lua_unpackbuf_be},
             {"newbuf", lua_newbuf},
             {"delbuf", lua_delbuf},
             {NULL, NULL}
