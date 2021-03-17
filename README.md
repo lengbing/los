@@ -1,5 +1,12 @@
 # los
+
 Lua Object Serialization
+
+# Install
+
+```bash
+luarocks install los
+```
 
 # Reference
 
