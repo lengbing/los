@@ -1,5 +1,5 @@
 package = "los"
-version = "0.0.1"
+version = "0.0.2"
 source = {
    url = "git+https://github.com/lengbing/los.git",
    tag = "0.0.2"
