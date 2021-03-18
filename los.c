@@ -1072,9 +1072,8 @@ static int lua_delbuf(lua_State* L)
 LOS_EXPORT int luaopen_los(lua_State* L)
 {
     static_assert(sizeof(lua_Number) == 8, "require 8 bytes lua_Number");
-    int le = 1;
-    le <<= 8;
-    if (le) {
+    ucast u = (ucast){ .u64 = 1 };
+    if (u.u32[0]) {
         luaL_Reg lib[] = {
             {"pack", lua_pack_le},
             {"unpack", lua_unpack_le},
