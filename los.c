@@ -948,6 +948,7 @@ static int lua_pack_le(lua_State* L)
         luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
         luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
         luaL_checkany(L, 4);
+        lua_settop(L, 4);
         char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
@@ -956,6 +957,7 @@ static int lua_pack_le(lua_State* L)
         return 1;
     }
     else {
+        lua_settop(L, 1);
         luaL_Buffer B;
         luaL_buffinit(L, &B);
         size_t resultingLength = pack_le(L, &B);
@@ -973,6 +975,7 @@ static int lua_pack_be(lua_State* L)
         luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
         luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
         luaL_checkany(L, 4);
+        lua_settop(L, 4);
         char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
@@ -981,6 +984,7 @@ static int lua_pack_be(lua_State* L)
         return 1;
     }
     else {
+        lua_settop(L, 1);
         luaL_Buffer B;
         luaL_buffinit(L, &B);
         size_t resultingLength = pack_be(L, &B);
@@ -997,6 +1001,7 @@ static int lua_unpack_le(lua_State* L)
     if (lua_islightuserdata(L, 1)) {
         luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
         luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        lua_settop(L, 3);
         const char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
@@ -1006,6 +1011,7 @@ static int lua_unpack_le(lua_State* L)
     }
     else {
         luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
+        lua_settop(L, 1);
         size_t availableSize;
         const char* B = lua_tolstring(L, -1, &availableSize);
         size_t consumedLength = unpack_le(L, B, availableSize);
@@ -1021,6 +1027,7 @@ static int lua_unpack_be(lua_State* L)
     if (lua_islightuserdata(L, 1)) {
         luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
         luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        lua_settop(L, 3);
         const char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
@@ -1030,6 +1037,7 @@ static int lua_unpack_be(lua_State* L)
     }
     else {
         luaL_argexpected(L, lua_isstring(L, 1), 1, lua_typename(L, LUA_TSTRING));
+        lua_settop(L, 1);
         size_t availableSize;
         const char* B = lua_tolstring(L, -1, &availableSize);
         size_t consumedLength = unpack_be(L, B, availableSize);
