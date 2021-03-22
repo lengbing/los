@@ -90,3 +90,7 @@ Sets the los module working endian
 
 - `local_endian` - the local machine endian
 - `target_endian` - the target endian that los outputs and inputs with
+
+# See also
+
+- [cbuf - Simple C Buffer for Lua](https://github.com/lengbing/cbuf)
