@@ -1047,28 +1047,6 @@ static int lua_unpack_be(lua_State* L)
 }
 
 
-static int lua_newbuf(lua_State* L)
-{
-    luaL_argexpected(L, lua_isinteger(L, 1), 1, "integer");
-    size_t size = lua_tointeger(L, 1);
-    char* B = malloc(size);
-    if (B) {
-        lua_pushlightuserdata(L, B);
-        return 1;
-    }
-    return 0;
-}
-
-
-static int lua_delbuf(lua_State* L)
-{
-    luaL_argexpected(L, lua_islightuserdata(L, 1), 1, lua_typename(L, LUA_TLIGHTUSERDATA));
-    char* B = lua_touserdata(L, 1);
-    free(B);
-    return 0;
-}
-
-
 LOS_EXPORT int luaopen_los(lua_State* L)
 {
     static_assert(sizeof(lua_Number) == 8, "require 8 bytes lua_Number");
@@ -1077,8 +1055,6 @@ LOS_EXPORT int luaopen_los(lua_State* L)
         luaL_Reg lib[] = {
             {"pack", lua_pack_le},
             {"unpack", lua_unpack_le},
-            {"newbuf", lua_newbuf},
-            {"delbuf", lua_delbuf},
             {NULL, NULL}
         };
         luaL_newlib(L, lib);
@@ -1087,8 +1063,6 @@ LOS_EXPORT int luaopen_los(lua_State* L)
         luaL_Reg lib[] = {
             {"pack", lua_pack_be},
             {"unpack", lua_unpack_be},
-            {"newbuf", lua_newbuf},
-            {"delbuf", lua_delbuf},
             {NULL, NULL}
         };
         luaL_newlib(L, lib);
