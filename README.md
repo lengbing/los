@@ -59,3 +59,34 @@ unpack(buffer, index, size)
 
 - the resulting object
 - the consumed length of the string or the buffer
+
+## setendian
+```Lua
+setendian(losmod, endian)
+```
+
+Sets the los module working endian
+
+##### Parameters
+
+- losmod - the los module table
+- endian - the target working endian, 'le' for little endian and 'be for big endian
+
+##### Returns
+
+- none
+
+##### Notes
+
+- los works with the local machine's endian by default
+- `setendian` changes the fields of los module table to target endian version
+- you should call `setendian` immediately after requiring los module, like this:
+  ```Lua
+  local los = require('los')
+  los:setendian('le')
+  ```
+
+## Properties
+
+- `local_endian` - the local machine endian
+- `target_endian` - the target endian that los outputs and inputs with

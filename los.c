@@ -69,7 +69,7 @@ typedef union ucast
 } ucast;
 
 
-static size_t pack_le(lua_State* L, luaL_Buffer* B)
+static size_t pack(lua_State* L, luaL_Buffer* B)
 {
     int type = lua_type(L, -1);
     switch (type)
@@ -163,18 +163,18 @@ static size_t pack_le(lua_State* L, luaL_Buffer* B)
             if (!lua_isinteger(L, -1) || lua_tointeger(L, -1) != arridx++) {
                 break;
             }
-            size += pack_le(L, B);
+            size += pack(L, B);
             lua_pop(L, 1);
         }
         luaL_addchar(B, SIGN_TBLSEP);
         if (lua_gettop(L) > top) {
-            size += pack_le(L, B);
+            size += pack(L, B);
             lua_pop(L, 1);
-            size += pack_le(L, B);
+            size += pack(L, B);
             while (lua_next(L, -2)) {
-                size += pack_le(L, B);
+                size += pack(L, B);
                 lua_pop(L, 1);
-                size += pack_le(L, B);
+                size += pack(L, B);
             }
         }
         luaL_addchar(B, SIGN_TBLEND);
@@ -188,7 +188,7 @@ static size_t pack_le(lua_State* L, luaL_Buffer* B)
 }
 
 
-static size_t pack_be(lua_State* L, luaL_Buffer* B)
+static size_t pack_x(lua_State* L, luaL_Buffer* B)
 {
     int type = lua_type(L, -1);
     switch (type)
@@ -288,18 +288,18 @@ static size_t pack_be(lua_State* L, luaL_Buffer* B)
             if (!lua_isinteger(L, -1) || lua_tointeger(L, -1) != arridx++) {
                 break;
             }
-            size += pack_be(L, B);
+            size += pack_x(L, B);
             lua_pop(L, 1);
         }
         luaL_addchar(B, SIGN_TBLSEP);
         if (lua_gettop(L) > top) {
-            size += pack_be(L, B);
+            size += pack_x(L, B);
             lua_pop(L, 1);
-            size += pack_be(L, B);
+            size += pack_x(L, B);
             while (lua_next(L, -2)) {
-                size += pack_be(L, B);
+                size += pack_x(L, B);
                 lua_pop(L, 1);
-                size += pack_be(L, B);
+                size += pack_x(L, B);
             }
         }
         luaL_addchar(B, SIGN_TBLEND);
@@ -313,7 +313,7 @@ static size_t pack_be(lua_State* L, luaL_Buffer* B)
 }
 
 
-static size_t packbuf_le(lua_State* L, char* B, size_t buflen)
+static size_t packbuf(lua_State* L, char* B, size_t buflen)
 {
     int type = lua_type(L, -1);
     switch (type)
@@ -446,20 +446,20 @@ static size_t packbuf_le(lua_State* L, char* B, size_t buflen)
             if (!lua_isinteger(L, -1) || lua_tointeger(L, -1) != arridx++) {
                 break;
             }
-            size += packbuf_le(L, B + size, buflen - size);
+            size += packbuf(L, B + size, buflen - size);
             lua_pop(L, 1);
         }
         checkbuflen(buflen, size + 1);
         B[size] = SIGN_TBLSEP;
         ++size;
         if (lua_gettop(L) > top) {
-            size += packbuf_le(L, B + size, buflen - size);
+            size += packbuf(L, B + size, buflen - size);
             lua_pop(L, 1);
-            size += packbuf_le(L, B + size, buflen - size);
+            size += packbuf(L, B + size, buflen - size);
             while (lua_next(L, -2)) {
-                size += packbuf_le(L, B + size, buflen - size);
+                size += packbuf(L, B + size, buflen - size);
                 lua_pop(L, 1);
-                size += packbuf_le(L, B + size, buflen - size);
+                size += packbuf(L, B + size, buflen - size);
             }
         }
         checkbuflen(buflen, size + 1);
@@ -474,7 +474,7 @@ static size_t packbuf_le(lua_State* L, char* B, size_t buflen)
 }
 
 
-static size_t packbuf_be(lua_State* L, char* B, size_t buflen)
+static size_t packbuf_x(lua_State* L, char* B, size_t buflen)
 {
     int type = lua_type(L, -1);
     switch (type)
@@ -607,20 +607,20 @@ static size_t packbuf_be(lua_State* L, char* B, size_t buflen)
             if (!lua_isinteger(L, -1) || lua_tointeger(L, -1) != arridx++) {
                 break;
             }
-            size += packbuf_be(L, B + size, buflen - size);
+            size += packbuf_x(L, B + size, buflen - size);
             lua_pop(L, 1);
         }
         checkbuflen(buflen, size + 1);
         B[size] = SIGN_TBLSEP;
         ++size;
         if (lua_gettop(L) > top) {
-            size += packbuf_be(L, B + size, buflen - size);
+            size += packbuf_x(L, B + size, buflen - size);
             lua_pop(L, 1);
-            size += packbuf_be(L, B + size, buflen - size);
+            size += packbuf_x(L, B + size, buflen - size);
             while (lua_next(L, -2)) {
-                size += packbuf_be(L, B + size, buflen - size);
+                size += packbuf_x(L, B + size, buflen - size);
                 lua_pop(L, 1);
-                size += packbuf_be(L, B + size, buflen - size);
+                size += packbuf_x(L, B + size, buflen - size);
             }
         }
         checkbuflen(buflen, size + 1);
@@ -635,7 +635,7 @@ static size_t packbuf_be(lua_State* L, char* B, size_t buflen)
 }
 
 
-static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
+static size_t unpack(lua_State* L, const char* B, size_t buflen)
 {
     if (buflen == 0) {
         return 0;
@@ -758,14 +758,14 @@ static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
         size_t consume = 0;
         lua_newtable(L);
         int idx = 1;
-        while (consume = unpack_le(L, B + total, buflen - total)) {
+        while (consume = unpack(L, B + total, buflen - total)) {
             lua_rawseti(L, -2, idx++);
             total += consume;
         }
         ++total;
-        while (consume = unpack_le(L, B + total, buflen - total)) {
+        while (consume = unpack(L, B + total, buflen - total)) {
             total += consume;
-            consume = unpack_le(L, B + total, buflen - total);
+            consume = unpack(L, B + total, buflen - total);
             if (consume == 0) {
                 luaL_error(L, "incomplete buffer");
             }
@@ -788,7 +788,7 @@ static size_t unpack_le(lua_State* L, const char* B, size_t buflen)
 }
 
 
-static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
+static size_t unpack_x(lua_State* L, const char* B, size_t buflen)
 {
     if (buflen == 0) {
         return 0;
@@ -911,14 +911,14 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
         size_t consume = 0;
         lua_newtable(L);
         int idx = 1;
-        while (consume = unpack_be(L, B + total, buflen - total)) {
+        while (consume = unpack_x(L, B + total, buflen - total)) {
             lua_rawseti(L, -2, idx++);
             total += consume;
         }
         ++total;
-        while (consume = unpack_be(L, B + total, buflen - total)) {
+        while (consume = unpack_x(L, B + total, buflen - total)) {
             total += consume;
-            consume = unpack_be(L, B + total, buflen - total);
+            consume = unpack_x(L, B + total, buflen - total);
             if (consume == 0) {
                 luaL_error(L, "incomplete buffer");
             }
@@ -941,7 +941,7 @@ static size_t unpack_be(lua_State* L, const char* B, size_t buflen)
 }
 
 
-static int lua_pack_le(lua_State* L)
+static int los_pack(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
@@ -952,7 +952,7 @@ static int lua_pack_le(lua_State* L)
         char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t resultingLength = packbuf_le(L, B + offset, availableSize);
+        size_t resultingLength = packbuf(L, B + offset, availableSize);
         lua_pushinteger(L, resultingLength);
         return 1;
     }
@@ -960,7 +960,7 @@ static int lua_pack_le(lua_State* L)
         lua_settop(L, 1);
         luaL_Buffer B;
         luaL_buffinit(L, &B);
-        size_t resultingLength = pack_le(L, &B);
+        size_t resultingLength = pack(L, &B);
         luaL_pushresult(&B);
         lua_pushinteger(L, resultingLength);
         return 2;
@@ -968,7 +968,7 @@ static int lua_pack_le(lua_State* L)
 }
 
 
-static int lua_pack_be(lua_State* L)
+static int los_pack_x(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
@@ -979,7 +979,7 @@ static int lua_pack_be(lua_State* L)
         char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t resultingLength = packbuf_be(L, B + offset, availableSize);
+        size_t resultingLength = packbuf_x(L, B + offset, availableSize);
         lua_pushinteger(L, resultingLength);
         return 1;
     }
@@ -987,7 +987,7 @@ static int lua_pack_be(lua_State* L)
         lua_settop(L, 1);
         luaL_Buffer B;
         luaL_buffinit(L, &B);
-        size_t resultingLength = pack_be(L, &B);
+        size_t resultingLength = pack_x(L, &B);
         luaL_pushresult(&B);
         lua_pushinteger(L, resultingLength);
         return 2;
@@ -995,7 +995,7 @@ static int lua_pack_be(lua_State* L)
 }
 
 
-static int lua_unpack_le(lua_State* L)
+static int los_unpack(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
@@ -1005,7 +1005,7 @@ static int lua_unpack_le(lua_State* L)
         const char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t consumedLength = unpack_le(L, B + offset, availableSize);
+        size_t consumedLength = unpack(L, B + offset, availableSize);
         lua_pushinteger(L, consumedLength);
         return 2;
     }
@@ -1014,14 +1014,14 @@ static int lua_unpack_le(lua_State* L)
         lua_settop(L, 1);
         size_t availableSize;
         const char* B = lua_tolstring(L, -1, &availableSize);
-        size_t consumedLength = unpack_le(L, B, availableSize);
+        size_t consumedLength = unpack(L, B, availableSize);
         lua_pushinteger(L, consumedLength);
         return 2;
     }
 }
 
 
-static int lua_unpack_be(lua_State* L)
+static int los_unpack_x(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
@@ -1031,7 +1031,7 @@ static int lua_unpack_be(lua_State* L)
         const char* B = lua_touserdata(L, 1);
         size_t offset = lua_tointeger(L, 2);
         size_t availableSize = lua_tointeger(L, 3);
-        size_t consumedLength = unpack_be(L, B + offset, availableSize);
+        size_t consumedLength = unpack_x(L, B + offset, availableSize);
         lua_pushinteger(L, consumedLength);
         return 2;
     }
@@ -1040,32 +1040,63 @@ static int lua_unpack_be(lua_State* L)
         lua_settop(L, 1);
         size_t availableSize;
         const char* B = lua_tolstring(L, -1, &availableSize);
-        size_t consumedLength = unpack_be(L, B, availableSize);
+        size_t consumedLength = unpack_x(L, B, availableSize);
         lua_pushinteger(L, consumedLength);
         return 2;
     }
+}
+
+
+static int los_setendian(lua_State* L)
+{
+    luaL_argexpected(L, lua_istable(L, 1), 1, lua_typename(L, LUA_TTABLE));
+    ucast u = (ucast){ .u64 = 1 };
+    int localle = u.u32[0] != 0;
+    int targetle;
+    int top = lua_gettop(L);
+    if (top >= 2) {
+        luaL_argexpected(L, lua_isstring(L, 2), 2, lua_typename(L, LUA_TSTRING));
+        const char* endian = lua_tostring(L, 1);
+        if (strncmp(endian, "le", 2)) {
+            targetle = 1;
+        }
+        else if (strncmp(endian, "be", 2)) {
+            targetle = 0;
+        }
+        else {
+            luaL_argerror(L, 1, "invalid endian");
+            return 0;
+        }
+    }
+    else {
+        targetle = localle;
+    }
+    int eqle = targetle == localle;
+    lua_pushcfunction(L, eqle ? los_pack : los_pack_x);
+    lua_setfield(L, 1, "pack");
+    lua_pushcfunction(L, eqle ? los_unpack : los_unpack_x);
+    lua_setfield(L, 1, "unpack");
+    lua_pushstring(L, localle ? "le" : "be");
+    lua_setfield(L, 1, "local_endian");
+    lua_pushstring(L, targetle ? "le" : "be");
+    lua_setfield(L, 1, "target_endian");
+    return 0;
 }
 
 
 LOS_EXPORT int luaopen_los(lua_State* L)
 {
     static_assert(sizeof(lua_Number) == 8, "require 8 bytes lua_Number");
-    ucast u = (ucast){ .u64 = 1 };
-    if (u.u32[0]) {
-        luaL_Reg lib[] = {
-            {"pack", lua_pack_le},
-            {"unpack", lua_unpack_le},
-            {NULL, NULL}
-        };
-        luaL_newlib(L, lib);
-    }
-    else {
-        luaL_Reg lib[] = {
-            {"pack", lua_pack_be},
-            {"unpack", lua_unpack_be},
-            {NULL, NULL}
-        };
-        luaL_newlib(L, lib);
+    luaL_Reg lib[] = {
+        {"setendian", los_setendian},
+        {NULL, NULL}
+    };
+    luaL_newlib(L, lib);
+    lua_pushcfunction(L, los_setendian);
+    lua_pushvalue(L, -2);
+    if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+        lua_error(L);
+        return 0;
     }
     return 1;
 }
