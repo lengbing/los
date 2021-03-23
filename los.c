@@ -7,9 +7,9 @@
 #include <lauxlib.h>
 
 #ifdef _MSC_VER
-#define LOS_EXPORT __declspec(dllexport)
+#define LUA_MOD_EXPORT __declspec(dllexport)
 #else
-#define LOS_EXPORT extern
+#define LUA_MOD_EXPORT extern
 #endif
 
 #define SIGN_FLT    0xf0
@@ -1084,7 +1084,7 @@ static int los_setendian(lua_State* L)
 }
 
 
-LOS_EXPORT int luaopen_los(lua_State* L)
+LUA_MOD_EXPORT int luaopen_los(lua_State* L)
 {
     static_assert(sizeof(lua_Number) == 8, "require 8 bytes lua_Number");
     luaL_Reg lib[] = {
