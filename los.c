@@ -33,9 +33,9 @@
 #define IS_SHRINT(v) (((v) & MASK_SHRINT) != 0xc0)
 #define IS_SHRSTR(v) (((v) & MASK_SHRSTR) == 0xc0)
 
-#define swap16(x) ((__uint16_t)( \
-    (((__uint16_t)(x) & 0xff00U) >> 8) | \
-    (((__uint16_t)(x) & 0x00ffU) << 8)))
+#define swap16(x) ((uint16_t)( \
+    (((uint16_t)(x) & 0xff00U) >> 8) | \
+    (((uint16_t)(x) & 0x00ffU) << 8)))
 
 #define swap32(x) ((uint32_t)( \
     (((uint32_t)(x) & 0xff000000U) >> 24) | \
