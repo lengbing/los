@@ -6,7 +6,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define LUA_MOD_EXPORT __declspec(dllexport)
 #else
 #define LUA_MOD_EXPORT extern
@@ -33,25 +33,25 @@
 #define IS_SHRINT(v) (((v) & MASK_SHRINT) != 0xc0)
 #define IS_SHRSTR(v) (((v) & MASK_SHRSTR) == 0xc0)
 
-#define swap16(x) (\
-    (((x) & 0xff00) >> 8) | \
-    (((x) & 0x00ff) << 8))
+#define swap16(x) ((__uint16_t)( \
+    (((__uint16_t)(x) & 0xff00U) >> 8) | \
+    (((__uint16_t)(x) & 0x00ffU) << 8)))
 
-#define swap32(x) (\
-    (((x) & 0xff000000) >> 24) | \
-    (((x) & 0x00ff0000) >> 8)  | \
-    (((x) & 0x0000ff00) << 8)  | \
-    (((x) & 0x000000ff) << 24))
+#define swap32(x) ((uint32_t)( \
+    (((uint32_t)(x) & 0xff000000U) >> 24) | \
+    (((uint32_t)(x) & 0x00ff0000U) >>  8) | \
+    (((uint32_t)(x) & 0x0000ff00U) <<  8) | \
+    (((uint32_t)(x) & 0x000000ffU) << 24)))
 
-#define swap64(x) (\
-    (((x) & 0xff00000000000000) >> 56) | \
-    (((x) & 0x00ff000000000000) >> 40) | \
-    (((x) & 0x0000ff0000000000) >> 24) | \
-    (((x) & 0x000000ff00000000) >> 8)  | \
-    (((x) & 0x00000000ff000000) << 8)  | \
-    (((x) & 0x0000000000ff0000) << 24) | \
-    (((x) & 0x000000000000ff00) << 40) | \
-    (((x) & 0x00000000000000ff) << 56))
+#define swap64(x) ((uint64_t)( \
+    (((uint64_t)(x) & 0xff00000000000000ULL) >> 56) | \
+    (((uint64_t)(x) & 0x00ff000000000000ULL) >> 40) | \
+    (((uint64_t)(x) & 0x0000ff0000000000ULL) >> 24) | \
+    (((uint64_t)(x) & 0x000000ff00000000ULL) >>  8) | \
+    (((uint64_t)(x) & 0x00000000ff000000ULL) <<  8) | \
+    (((uint64_t)(x) & 0x0000000000ff0000ULL) << 24) | \
+    (((uint64_t)(x) & 0x000000000000ff00ULL) << 40) | \
+    (((uint64_t)(x) & 0x00000000000000ffULL) << 56)))
 
 #define checkbuflen(len, need) (void)(((len) >= (need)) || luaL_error(L, "not enough avaliable buffer"));
 
@@ -261,15 +261,17 @@ static size_t pack_x(lua_State* L, luaL_Buffer* B)
             size += 2;
         }
         else if (strlength <= UINT16_MAX) {
-            strlength = swap64(strlength);
+            uint16_t i = (uint16_t)strlength;
+            i = swap16(i);
             luaL_addchar(B, SIGN_STR2);
-            luaL_addlstring(B, (const char*)&strlength, 2);
+            luaL_addlstring(B, (const char*)&i, 2);
             size += 3;
         }
         else if (strlength <= UINT32_MAX) {
-            strlength = swap64(strlength);
+            uint32_t i = (uint32_t)strlength;
+            i = swap32(i);
             luaL_addchar(B, SIGN_STR4);
-            luaL_addlstring(B, (const char*)&strlength, 4);
+            luaL_addlstring(B, (const char*)&i, 4);
             size += 5;
         }
         else {
@@ -945,13 +947,11 @@ static int los_pack(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
-        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
-        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        char* B = lua_touserdata(L, 1);
+        size_t offset = luaL_checkinteger(L, 2);
+        size_t availableSize = luaL_checkinteger(L, 3);
         luaL_checkany(L, 4);
         lua_settop(L, 4);
-        char* B = lua_touserdata(L, 1);
-        size_t offset = lua_tointeger(L, 2);
-        size_t availableSize = lua_tointeger(L, 3);
         size_t resultingLength = packbuf(L, B + offset, availableSize);
         lua_pushinteger(L, resultingLength);
         return 1;
@@ -972,13 +972,11 @@ static int los_pack_x(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
-        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
-        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
+        char* B = lua_touserdata(L, 1);
+        size_t offset = luaL_checkinteger(L, 2);
+        size_t availableSize = luaL_checkinteger(L, 3);
         luaL_checkany(L, 4);
         lua_settop(L, 4);
-        char* B = lua_touserdata(L, 1);
-        size_t offset = lua_tointeger(L, 2);
-        size_t availableSize = lua_tointeger(L, 3);
         size_t resultingLength = packbuf_x(L, B + offset, availableSize);
         lua_pushinteger(L, resultingLength);
         return 1;
@@ -999,12 +997,10 @@ static int los_unpack(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
-        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
-        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
-        lua_settop(L, 3);
         const char* B = lua_touserdata(L, 1);
-        size_t offset = lua_tointeger(L, 2);
-        size_t availableSize = lua_tointeger(L, 3);
+        size_t offset = luaL_checkinteger(L, 2);
+        size_t availableSize = luaL_checkinteger(L, 3);
+        lua_settop(L, 3);
         size_t consumedLength = unpack(L, B + offset, availableSize);
         lua_pushinteger(L, consumedLength);
         return 2;
@@ -1025,12 +1021,10 @@ static int los_unpack_x(lua_State* L)
 {
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
-        luaL_argexpected(L, lua_isinteger(L, 2), 2, "integer");
-        luaL_argexpected(L, lua_isinteger(L, 3), 3, "integer");
-        lua_settop(L, 3);
         const char* B = lua_touserdata(L, 1);
-        size_t offset = lua_tointeger(L, 2);
-        size_t availableSize = lua_tointeger(L, 3);
+        size_t offset = luaL_checkinteger(L, 2);
+        size_t availableSize = luaL_checkinteger(L, 3);
+        lua_settop(L, 3);
         size_t consumedLength = unpack_x(L, B + offset, availableSize);
         lua_pushinteger(L, consumedLength);
         return 2;
@@ -1055,8 +1049,7 @@ static int los_setendian(lua_State* L)
     int targetle;
     int top = lua_gettop(L);
     if (top >= 2) {
-        luaL_argexpected(L, lua_isstring(L, 2), 2, lua_typename(L, LUA_TSTRING));
-        const char* endian = lua_tostring(L, 1);
+        const char* endian = luaL_checkstring(L, 2);
         if (strncmp(endian, "le", 2)) {
             targetle = 1;
         }
