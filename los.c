@@ -12,6 +12,9 @@
 #define LUA_MOD_EXPORT extern
 #endif
 
+#define ENDIAN_LE 1
+#define ENDIAN_BE 2
+
 #define SIGN_FLT    0xf0
 #define SIGN_INT1   0xf1
 #define SIGN_INT2   0xf2
@@ -1045,33 +1048,30 @@ static int los_setendian(lua_State* L)
 {
     luaL_argexpected(L, lua_istable(L, 1), 1, lua_typename(L, LUA_TTABLE));
     ucast u = (ucast){ .u64 = 1 };
-    int localle = u.u32[0] != 0;
-    int targetle;
+    int local_endian = u.u32[0] != 0 ? ENDIAN_LE : ENDIAN_BE;
+    int target_endian = local_endian;
     int top = lua_gettop(L);
     if (top >= 2) {
         const char* endian = luaL_checkstring(L, 2);
         if (strncmp(endian, "le", 2)) {
-            targetle = 1;
+            target_endian = ENDIAN_LE;
         }
         else if (strncmp(endian, "be", 2)) {
-            targetle = 0;
+            target_endian = ENDIAN_BE;
         }
         else {
             luaL_argerror(L, 1, "invalid endian");
             return 0;
         }
     }
-    else {
-        targetle = localle;
-    }
-    int eqle = targetle == localle;
-    lua_pushcfunction(L, eqle ? los_pack : los_pack_x);
+    int eq = local_endian == target_endian;
+    lua_pushcfunction(L, eq ? los_pack : los_pack_x);
     lua_setfield(L, 1, "pack");
-    lua_pushcfunction(L, eqle ? los_unpack : los_unpack_x);
+    lua_pushcfunction(L, eq ? los_unpack : los_unpack_x);
     lua_setfield(L, 1, "unpack");
-    lua_pushstring(L, localle ? "le" : "be");
+    lua_pushstring(L, local_endian == ENDIAN_LE ? "le" : "be");
     lua_setfield(L, 1, "local_endian");
-    lua_pushstring(L, targetle ? "le" : "be");
+    lua_pushstring(L, target_endian == ENDIAN_LE ? "le" : "be");
     lua_setfield(L, 1, "target_endian");
     return 0;
 }
