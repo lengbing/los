@@ -2,6 +2,8 @@
 
 Lua Object Serialization
 
+<!--
+
 # Install
 
 ```bash
