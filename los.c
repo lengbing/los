@@ -955,17 +955,17 @@ static int los_pack(lua_State* L)
         size_t size = luaL_checkinteger(L, 3);
         luaL_checkany(L, 4);
         lua_settop(L, 4);
-        size_t r = packbuf(L, B + index, size);
-        lua_pushinteger(L, r);
+        size_t len = packbuf(L, B + index, size);
+        lua_pushinteger(L, len);
         return 1;
     }
     else {
         lua_settop(L, 1);
         luaL_Buffer B;
         luaL_buffinit(L, &B);
-        size_t r = pack(L, &B);
+        size_t len = pack(L, &B);
         luaL_pushresult(&B);
-        lua_pushinteger(L, r);
+        lua_pushinteger(L, len);
         return 2;
     }
 }
@@ -980,17 +980,17 @@ static int los_pack_x(lua_State* L)
         size_t size = luaL_checkinteger(L, 3);
         luaL_checkany(L, 4);
         lua_settop(L, 4);
-        size_t r = packbuf_x(L, B + index, size);
-        lua_pushinteger(L, r);
+        size_t len = packbuf_x(L, B + index, size);
+        lua_pushinteger(L, len);
         return 1;
     }
     else {
         lua_settop(L, 1);
         luaL_Buffer B;
         luaL_buffinit(L, &B);
-        size_t r = pack_x(L, &B);
+        size_t len = pack_x(L, &B);
         luaL_pushresult(&B);
-        lua_pushinteger(L, r);
+        lua_pushinteger(L, len);
         return 2;
     }
 }
@@ -1004,8 +1004,8 @@ static int los_unpack(lua_State* L)
         size_t index = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         lua_settop(L, 3);
-        size_t r = unpack(L, B + index, size);
-        lua_pushinteger(L, r);
+        size_t consume = unpack(L, B + index, size);
+        lua_pushinteger(L, consume);
         return 2;
     }
     else {
@@ -1013,8 +1013,8 @@ static int los_unpack(lua_State* L)
         lua_settop(L, 1);
         size_t size;
         const char* B = lua_tolstring(L, -1, &size);
-        size_t r = unpack(L, B, size);
-        lua_pushinteger(L, r);
+        size_t consume = unpack(L, B, size);
+        lua_pushinteger(L, consume);
         return 2;
     }
 }
@@ -1028,8 +1028,8 @@ static int los_unpack_x(lua_State* L)
         size_t index = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         lua_settop(L, 3);
-        size_t r = unpack_x(L, B + index, size);
-        lua_pushinteger(L, r);
+        size_t consume = unpack_x(L, B + index, size);
+        lua_pushinteger(L, consume);
         return 2;
     }
     else {
@@ -1037,8 +1037,8 @@ static int los_unpack_x(lua_State* L)
         lua_settop(L, 1);
         size_t size;
         const char* B = lua_tolstring(L, -1, &size);
-        size_t r = unpack_x(L, B, size);
-        lua_pushinteger(L, r);
+        size_t consume = unpack_x(L, B, size);
+        lua_pushinteger(L, consume);
         return 2;
     }
 }
