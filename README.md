@@ -2,8 +2,6 @@
 
 Lua Object Serialization
 
-<!--
-
 # Install
 
 ```bash
@@ -12,57 +10,76 @@ luarocks install los
 
 # Reference
 
-## pack
+## Serialize: pack & dump
 
 ```Lua
-pack(object)
-pack(buffer, index, size, object)
+pack(object)                          -- (1)
+pack(buffer, offset, size, object)    -- (2)
+dump(object)                          -- (3)
+dump(buffer, offset, size, object)    -- (4)
 ```
 
-(1) Receives an object, returns a resulting string.
+(1)(3) Serialize an object to a string.
 
-(2) Receives a buffer and an object, writes the result into the buffer and returns the consumed length.
+(2)(4) Serialize an object to a string info a c buffer.
+
+(1)(2) Serialize into a readable format.
+
+(3)(4) Serialize into a binary format.
 
 ##### Parameters
 
 - object - simple lua object supporting boolean, number, string and table
 - buffer - lightuserdata refers to a c buffer, which the result is writting into
-- index - index of the buffer to writting start with
-- size - avaliable size of the buffer start from the index
+- offset - offset of the buffer to write start with
+- size - avaliable size of the buffer start from the offset
 
 ##### Returns
 
-(1)
+(1)(3)
+- the resulting length
 - the resulting string
+
+(2)(4)
 - the resulting length
 
-(2)
-- the resulting length, the consumed length of the buffer
+if failed
+- the error code less than 0: ETYPE, EBUF, ESTR, EFMT
 
-## unpack
+## Deserialize: unpack & load
 
 ```Lua
-unpack(string)
-unpack(buffer, index, size)
+unpack(string)                  -- (1)
+unpack(buffer, offset, size)    -- (2)
+load(string)                    -- (3)
+load(buffer, offset, size)      -- (4)
 ```
 
-(1) Receives a string, returns a lua object and the consumed length of the string.
+(1)(3) Deserialize a string to an object.
 
-(2) Receives a buffer, returns a lua object and the consumed length of the buffer.
+(2)(4) Deserialize a c buffer to an object.
 
 ##### Parameters
 
-- string - the encoded string returned by `pack`
-- buffer - lightuserdata refers to a c buffer containing the encoded string
-- index - index of the buffer to reading start with
-- size - avaliable size of the buffer start from the index
+- string - the serialized string
+- buffer - lightuserdata refers to a c buffer containing the serialized string
+- offset - offset of the buffer to read start with
+- size - avaliable size of the buffer start from the offset
 
 ##### Returns
 
-- the resulting object
 - the consumed length of the string or the buffer
+- the resulting object
 
-## setendian
+if failed
+- the error code less than 0: ESIGN, ESRC
+
+#### Notes
+- serialize functions and deserialize functions should work in pairs
+- use `unpack` to deserialize the string or buffer returned by `pack`
+- use `load` to deserialize the string or buffer returned by `dump`
+
+## Endian: setendian
 ```Lua
 setendian(losmod, endian)
 ```
@@ -80,8 +97,9 @@ Sets the los module working endian
 
 ##### Notes
 
-- los works with the local machine's endian by default
-- `setendian` changes the fields of los module table to target endian version
+- `dump` and `load` work with endian, while `pack` and `unpack` don't
+- they work with the local machine's endian by default
+- `setendian` changes `dump` and `load` to target endian version
 - you should call `setendian` immediately after requiring los module, like this:
   ```Lua
   local los = require('los')
@@ -92,6 +110,15 @@ Sets the los module working endian
 
 - `local_endian` - the local machine endian
 - `target_endian` - the target endian that los outputs and inputs with
+
+## Constants
+
+- ETYPE - error: unsupported type
+- ESIGN - error: wrong sign or format detected
+- EBUF - error: not enough buffer
+- ESRC - error: incomplete source
+- ESTR - error: string is too long
+- EFMT - error: failed on formatting number and string
 
 # See also
 

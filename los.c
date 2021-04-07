@@ -1024,11 +1024,11 @@ static int los_dump(lua_State* L)
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
         char* B = lua_touserdata(L, 1);
-        size_t index = luaL_checkinteger(L, 2);
+        size_t offset = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         luaL_checkany(L, 4);
         lua_settop(L, 4);
-        size_t len = dumpbuf(E, L, B + index, size);
+        size_t len = dumpbuf(E, L, B + offset, size);
         lua_pushinteger(L, len);
         return 1;
     }
@@ -1051,11 +1051,11 @@ static int los_dump_x(lua_State* L)
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
         char* B = lua_touserdata(L, 1);
-        size_t index = luaL_checkinteger(L, 2);
+        size_t offset = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         luaL_checkany(L, 4);
         lua_settop(L, 4);
-        size_t len = dumpbuf_x(E, L, B + index, size);
+        size_t len = dumpbuf_x(E, L, B + offset, size);
         lua_pushinteger(L, len);
         return 1;
     }
@@ -1078,10 +1078,10 @@ static int los_load(lua_State* L)
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
         const char* B = lua_touserdata(L, 1);
-        size_t index = luaL_checkinteger(L, 2);
+        size_t offset = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         lua_settop(L, 3);
-        size_t consume = load(E, L, B + index, size);
+        size_t consume = load(E, L, B + offset, size);
         lua_pushinteger(L, consume);
         lua_rotate(L, -2, 1);
         return 2;
@@ -1106,10 +1106,10 @@ static int los_load_x(lua_State* L)
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
         const char* B = lua_touserdata(L, 1);
-        size_t index = luaL_checkinteger(L, 2);
+        size_t offset = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         lua_settop(L, 3);
-        size_t consume = load_x(E, L, B + index, size);
+        size_t consume = load_x(E, L, B + offset, size);
         lua_pushinteger(L, consume);
         lua_rotate(L, -2, 1);
         return 2;
@@ -1388,14 +1388,14 @@ static size_t unpack(jmp_buf E, lua_State* L, const char* B, size_t buflen)
                 ++i;
                 i += unpack(E, L, B + i, buflen - i);
                 if (lua_isnil(L, -1)) {
-                    los_throw(E, LOS_ESRC);
+                    los_throw(E, LOS_ESIGN);
                 }
                 if (B[i] != ']') {
-                    los_throw(E, LOS_ESRC);
+                    los_throw(E, LOS_ESIGN);
                 }
                 ++i;
                 if (B[i] != '=') {
-                    los_throw(E, LOS_ESRC);
+                    los_throw(E, LOS_ESIGN);
                 }
                 ++i;
                 i += unpack(E, L, B + i, buflen - i);
@@ -1414,7 +1414,7 @@ static size_t unpack(jmp_buf E, lua_State* L, const char* B, size_t buflen)
         }
     }
     else if (c == ',') {
-        los_throw(E, LOS_ESRC);
+        los_throw(E, LOS_ESIGN);
     }
     else {
         size_t i;
@@ -1454,7 +1454,7 @@ static size_t unpack(jmp_buf E, lua_State* L, const char* B, size_t buflen)
         int isnum;
         lua_Number n = lua_tonumberx(L, -1, &isnum);
         if (!isnum) {
-            los_throw(E, LOS_ESRC);
+            los_throw(E, LOS_ESIGN);
         }
         lua_pop(L, 1);
         lua_pushnumber(L, n);
@@ -1470,11 +1470,11 @@ static int los_pack(lua_State* L)
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
         char* B = lua_touserdata(L, 1);
-        size_t index = luaL_checkinteger(L, 2);
+        size_t offset = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         luaL_checkany(L, 4);
         lua_settop(L, 4);
-        size_t len = packbuf(E, L, B + index, size);
+        size_t len = packbuf(E, L, B + offset, size);
         lua_pushinteger(L, len);
         return 1;
     }
@@ -1497,10 +1497,10 @@ static int los_unpack(lua_State* L)
     luaL_checkany(L, 1);
     if (lua_islightuserdata(L, 1)) {
         const char* B = lua_touserdata(L, 1);
-        size_t index = luaL_checkinteger(L, 2);
+        size_t offset = luaL_checkinteger(L, 2);
         size_t size = luaL_checkinteger(L, 3);
         lua_settop(L, 3);
-        size_t consume = unpack(E, L, B + index, size);
+        size_t consume = unpack(E, L, B + offset, size);
         lua_pushinteger(L, consume);
         lua_rotate(L, -2, 1);
         return 2;
