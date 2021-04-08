@@ -1402,18 +1402,22 @@ static size_t unpack(jmp_buf E, lua_State* L, const char* B, size_t buflen)
             }
             if (c == '[') {
                 ++i;
+                checksrclen(buflen - i, 1);
                 i += unpack(E, L, B + i, buflen - i);
                 if (lua_isnil(L, -1)) {
                     los_throw(E, LOS_ESIGN);
                 }
+                checksrclen(buflen - i, 1);
                 if (B[i] != ']') {
                     los_throw(E, LOS_ESIGN);
                 }
                 ++i;
+                checksrclen(buflen - i, 1);
                 if (B[i] != '=') {
                     los_throw(E, LOS_ESIGN);
                 }
                 ++i;
+                checksrclen(buflen - i, 1);
                 i += unpack(E, L, B + i, buflen - i);
                 lua_rawset(L, -3);
                 if (i < buflen && B[i] == ',') {
