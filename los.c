@@ -1198,19 +1198,25 @@ size_t pack(jmp_buf E, lua_State* L, luaL_Buffer* B)
         size_t size = 1;
         size_t len = lua_rawlen(L, -1);
         size_t numnil = 0;
+        int comma = 0;
         for (size_t i = 1; i <= len; ++i) {
             if (lua_rawgeti(L, -1, i) == LUA_TNIL) {
                 ++numnil;
             }
             else {
+                if (comma) {
+                    luaL_addchar(B, ',');
+                    ++size;
+                }
+                else {
+                    comma = 1;
+                }
                 for (size_t j = 0; j < numnil; ++j) {
                     luaL_addstring(B, "nil,");
                 }
                 size += numnil * 4;
                 numnil = 0;
                 size += pack(E, L, B);
-                luaL_addchar(B, ',');
-                ++size;
             }
             lua_pop(L, 1);
         }
@@ -1223,6 +1229,13 @@ size_t pack(jmp_buf E, lua_State* L, luaL_Buffer* B)
             lua_pushnil(L);
         }
         while (lua_next(L, -2)) {
+            if (comma) {
+                luaL_addchar(B, ',');
+                ++size;
+            }
+            else {
+                comma = 1;
+            }
             lua_rotate(L, -2, 1);
             luaL_addchar(B, '[');
             ++size;
@@ -1231,8 +1244,6 @@ size_t pack(jmp_buf E, lua_State* L, luaL_Buffer* B)
             size += 2;
             lua_rotate(L, -2, 1);
             size += pack(E, L, B);
-            luaL_addchar(B, ',');
-            ++size;
             lua_pop(L, 1);
         }
         lua_settop(L, top);
@@ -1314,7 +1325,7 @@ static size_t packbuf(jmp_buf E, lua_State* L, char* B, size_t buflen)
                 }
                 size += numnil * 4;
                 numnil = 0;
-                size += pack(E, L, B);
+                size += packbuf(E, L, B + size, buflen - size);
                 checkdestlen(buflen - size, 1);
                 B[size] = ',';
                 ++size;
@@ -1334,22 +1345,27 @@ static size_t packbuf(jmp_buf E, lua_State* L, char* B, size_t buflen)
             checkdestlen(buflen - size, 1);
             B[size] = '[';
             ++size;
-            size += pack(E, L, B);
+            size += packbuf(E, L, B + size, buflen - size);
             checkdestlen(buflen - size, 2);
             B[size] = ']';
             B[size + 1] = '=';
             size += 2;
             lua_rotate(L, -2, 1);
-            size += pack(E, L, B);
+            size += packbuf(E, L, B + size, buflen - size);
             checkdestlen(buflen - size, 1);
             B[size] = ',';
             ++size;
             lua_pop(L, 1);
         }
         lua_settop(L, top);
-        checkdestlen(buflen - size, 1);
-        B[size] = '}';
-        ++size;
+        if (B[size - 1] == ',') {
+            B[size - 1] = '}';
+        }
+        else {
+            checkdestlen(buflen - size, 1);
+            B[size] = '}';
+            ++size;
+        }
         return size;
     }
     default: {
@@ -1399,7 +1415,7 @@ static size_t unpack(jmp_buf E, lua_State* L, const char* B, size_t buflen)
                 }
                 ++i;
                 i += unpack(E, L, B + i, buflen - i);
-                lua_rawset(L, -2);
+                lua_rawset(L, -3);
                 if (i < buflen && B[i] == ',') {
                     ++i;
                 }
@@ -1412,6 +1428,7 @@ static size_t unpack(jmp_buf E, lua_State* L, const char* B, size_t buflen)
                 }
             }
         }
+        los_throw(E, LOS_ESRC);
     }
     else if (c == ',') {
         los_throw(E, LOS_ESIGN);
@@ -1419,47 +1436,59 @@ static size_t unpack(jmp_buf E, lua_State* L, const char* B, size_t buflen)
     else {
         size_t i;
         for (i = 1; i < buflen; ++i) {
-            if (B[i] == ',') {
+            if (B[i] == ',' || B[i] == '}' || B[i] == ']') {
                 break;
             }
         }
-        if (i == 2) {
+        int comma = (i < buflen) && (B[i] == ',');
+        if (i == 3) {
             if (B[0] == 'n' &&
                 B[1] == 'i' &&
                 B[2] == 'l') {
                 lua_pushnil(L);
-                return 3;
+                return comma ? 4 : 3;
             }
         }
-        else if (i == 3) {
+        else if (i == 4) {
             if (B[0] == 't' &&
                 B[1] == 'r' &&
                 B[2] == 'u' &&
                 B[3] == 'e') {
                 lua_pushboolean(L, 1);
-                return 4;
+                return comma ? 5 : 4;
             }
         }
-        else if (i == 4) {
+        else if (i == 5) {
             if (B[0] == 'f' &&
                 B[1] == 'a' &&
                 B[2] == 'l' &&
                 B[3] == 's' &&
                 B[4] == 'e') {
                 lua_pushboolean(L, 0);
-                return 5;
+                return comma ? 6 : 5;
             }
         }
-        lua_pushlstring(L, B, i + 1);
+        lua_pushlstring(L, B, i);
         int isnum;
-        lua_Number n = lua_tonumberx(L, -1, &isnum);
-        if (!isnum) {
-            los_throw(E, LOS_ESIGN);
+        if (B[0] == '0') {
+            lua_Number f = lua_tonumberx(L, -1, &isnum);
+            if (!isnum) {
+                los_throw(E, LOS_ESIGN);
+            }
+            lua_pop(L, 1);
+            lua_pushnumber(L, f);
         }
-        lua_pop(L, 1);
-        lua_pushnumber(L, n);
-        return i + 1;
+        else {
+            lua_Integer n = lua_tointegerx(L, -1, &isnum);
+            if (!isnum) {
+                los_throw(E, LOS_ESIGN);
+            }
+            lua_pop(L, 1);
+            lua_pushinteger(L, n);
+        }
+        return comma ? i + 1 : i;
     }
+    return 0;
 }
 
 
