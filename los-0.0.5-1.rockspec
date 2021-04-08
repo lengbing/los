@@ -1,8 +1,8 @@
 package = "los"
-version = "0.0.5-1"
+version = "0.0.6-1"
 source = {
    url = "git+https://github.com/lengbing/los.git",
-   tag = "0.0.10"
+   tag = "0.0.11"
 }
 description = {
    summary = "Lua Object Serialization",
