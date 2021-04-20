@@ -13,10 +13,10 @@ luarocks install los
 ## Serialize: pack & dump
 
 ```Lua
-pack(object)                          -- (1)
-pack(buffer, offset, size, object)    -- (2)
-dump(object)                          -- (3)
-dump(buffer, offset, size, object)    -- (4)
+pack(object)                  -- (1)
+pack(buffer, size, object)    -- (2)
+dump(object)                  -- (3)
+dump(buffer, size, object)    -- (4)
 ```
 
 (1)(3) Serialize an object to a string.
@@ -31,8 +31,7 @@ dump(buffer, offset, size, object)    -- (4)
 
 - object - simple lua object supporting boolean, number, string and table
 - buffer - lightuserdata refers to a c buffer, which the result is writting into
-- offset - offset of the buffer to write start with
-- size - avaliable size of the buffer start from the offset
+- size - avaliable size of the buffer
 
 ##### Returns
 
@@ -49,10 +48,10 @@ if failed
 ## Deserialize: unpack & load
 
 ```Lua
-unpack(string)                  -- (1)
-unpack(buffer, offset, size)    -- (2)
-load(string)                    -- (3)
-load(buffer, offset, size)      -- (4)
+unpack(string)          -- (1)
+unpack(buffer, size)    -- (2)
+load(string)            -- (3)
+load(buffer, size)      -- (4)
 ```
 
 (1)(3) Deserialize a string to an object.
@@ -63,8 +62,7 @@ load(buffer, offset, size)      -- (4)
 
 - string - the serialized string
 - buffer - lightuserdata refers to a c buffer containing the serialized string
-- offset - offset of the buffer to read start with
-- size - avaliable size of the buffer start from the offset
+- size - avaliable size of the buffer
 
 ##### Returns
 
